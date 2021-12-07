@@ -17,6 +17,7 @@
 # define MAX_FD 256
 # include <unistd.h>
 # include <stdlib.h>
+# include "../libft/libft.h"
 
 int		get_next_line(const int fd, char **line);
 void	ft_putendl(char const *s);
