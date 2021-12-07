@@ -6,7 +6,7 @@
 /*   By: cnysten <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/06 20:29:07 by cnysten           #+#    #+#             */
-/*   Updated: 2021/12/06 20:46:41 by cnysten          ###   ########.fr       */
+/*   Updated: 2021/12/07 20:20:28 by cnysten          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@ size_t	line_len(const char *buf)
 {
 	size_t	i;
 
+	if (!buf)
+		return (0);
 	i = 0;
 	while ((buf)[i] != '\n')
 		i++;
@@ -52,7 +54,7 @@ int	get_next_line(const int fd, char **line)
 	ssize_t		bytes_read;
 	size_t		len;
 
-	if (fd < 0)
+	if (fd < 0 || !line || BUFF_SIZE < 1)
 		return (-1);
 	if (!fds[fd]) // Check if buffer is currently null
 	{
