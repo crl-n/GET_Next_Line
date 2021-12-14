@@ -43,12 +43,15 @@ int	get_next_line(const int fd, char **line)
 			return (-1);
 		bytes_read = read(fd, fds[fd], BUFF_SIZE - 1);
 	}
-	while (!ft_strchr(fds[fd], '\n') && bytes_read == BUFF_SIZE - 1)
+	while (!ft_strchr(fds[fd], '\n') && bytes_read > 0)
 	{
-		add_to_line(line, fds[fd], BUFF_SIZE);
-		bytes_read = read(fd, fds[fd], BUFF_SIZE);
+		add_to_line(line, fds[fd], bytes_read);
+		bytes_read = read(fd, fds[fd], bytes_read);
 	}
-	add_to_line(line, fds[fd], bytes_read);
+	if (!ft_strchr(fds[fd], '\n') && bytes_read == 0)
+		add_to_line(line, fds[fd], ft_strlen(fds[fd]));
+	else
+		add_to_line(line, fds[fd], ((size_t) ft_strchr(fds[fd], '\n') - (size_t) fds[fd]));
 	if (bytes_read > 0)
 		return (1);
 	if (bytes_read == 0)
