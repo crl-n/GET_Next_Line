@@ -15,16 +15,18 @@
 
 static int	has_newline(const char *buff, char **newline)
 {
-	if (buff)
+	if (buff && !*newline)
 		*newline = ft_strchr(buff, '\n');
-	*newline = NULL;
 	return (!(*newline == NULL));
 }
 
 static void	read_to_buff(const int fd, char *buff, ssize_t *bytes_read)
 {
 	if (buff)
+	{
+		ft_strclr(buff);
 		*bytes_read = read(fd, buff, BUFF_SIZE - 1);
+	}
 }
 
 static void	create_buff(char **buff, const int fd, ssize_t *bytes_read)
@@ -66,7 +68,10 @@ int	get_next_line(const int fd, char **line)
 	char		*newline;
 	ssize_t		bytes_read;
 
+	if (fd < 0)
+		return (-1);
 	bytes_read = 0;
+	newline = NULL;
 	if (!bufs[fd])
 		create_buff(&bufs[fd], fd, &bytes_read);
 	if (!bufs[fd])
@@ -75,11 +80,14 @@ int	get_next_line(const int fd, char **line)
 	{
 		add_to_line(line, bufs[fd], newline);
 		read_to_buff(fd, bufs[fd], &bytes_read);
+		if (bytes_read <= 0)
+			break ;
 	}
 	add_to_line(line, bufs[fd], newline);
 	if (bytes_read == 0 && ft_strlen(bufs[fd]) == 0)
 	{
 		free(bufs[fd]);
+		bufs[fd] = NULL;
 		return (0);
 	}
 	return (1);
