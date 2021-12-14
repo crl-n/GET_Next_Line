@@ -12,22 +12,20 @@
 
 #include "get_next_line.h"
 
-void	add_to_line(char **line, char *fd, size_t len)
+void	add_to_line(char **line, char *fd, size_t readlen)
 {
 	char	*temp;
 
 	if (!*line)
 	{
-		*line = ft_strnew(len);
-		ft_strjoin(*line, ft_strsub(fd, 0, len));
+		*line = ft_strnew(readlen);
+		ft_strncpy(*line, ft_strsub(fd, 0, readlen), readlen);
 	}
 	else
 	{
-		temp = ft_strnew(ft_strlen(*line) + len);
-		ft_strcpy(temp, *line);
+		temp = ft_strjoin(*line, ft_strsub(fd, 0, readlen));
 		free(*line);
 		*line = temp;
-		ft_strjoin(*line, ft_strsub(fd, 0, len));
 	}
 }
 
@@ -40,7 +38,7 @@ int	get_next_line(const int fd, char **line)
 		return (-1);
 	if (!fds[fd])
 	{
-		fds[fd] = (char *) malloc(BUFF_SIZE * sizeof (char));
+		fds[fd] = ft_strnew(BUFF_SIZE);
 		if (!fds[fd])
 			return (-1);
 		bytes_read = read(fd, fds[fd], BUFF_SIZE - 1);
