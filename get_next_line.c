@@ -6,7 +6,7 @@
 /*   By: cnysten <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/06 20:29:07 by cnysten           #+#    #+#             */
-/*   Updated: 2021/12/15 17:09:13 by cnysten          ###   ########.fr       */
+/*   Updated: 2021/12/15 18:05:36 by cnysten          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,29 +46,28 @@ static int	create_buff(char **buff, const int fd, ssize_t *bytes_read)
 static void	add_to_line(char **line, char *buff, char *newline)
 {
 	char	*temp;
+	char	*sub;
 
 	if (!*line && !newline)
-	{
-		*line = ft_strnew(BUFF_SIZE + 1);
-		ft_strncpy(*line, buff, BUFF_SIZE + 1);
-	}
-	else if (!*line && newline)
+		*line = ft_strndup(buff, BUFF_SIZE + 1);
+	if (!*line && newline)
 	{
 		*line = ft_strsub(buff, 0, (newline - buff));
-		ft_strncpy(buff, (newline + 1), BUFF_SIZE); // newline is not  necessarily null terminated
+		ft_strncpy(buff, (newline + 1), BUFF_SIZE - (newline - buff));
 	}
-	else if (*line && !newline)
+	if (*line)
 	{
-		temp = ft_strjoin(*line, buff);
+		if (!newline)
+			temp = ft_strjoin(*line, buff);
+		else
+		{
+			sub = ft_strsub(buff, 0, (newline - buff));
+			temp = ft_strjoin(*line, sub);
+			ft_strncpy(buff, (newline + 1), BUFF_SIZE);
+			free(sub);
+		}
 		free(*line);
 		*line = temp;
-	}
-	else if (*line && newline)
-	{
-		temp = ft_strjoin(*line, ft_strsub(buff, 0, (newline - buff)));
-		free(*line);
-		*line = temp;
-		ft_strncpy(buff, (newline + 1), BUFF_SIZE);
 	}
 }
 
