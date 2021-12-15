@@ -25,7 +25,7 @@ static void	read_to_buff(const int fd, char *buff, ssize_t *bytes_read)
 	if (buff)
 	{
 		ft_strclr(buff);
-		*bytes_read = read(fd, buff, BUFF_SIZE - 1);
+		*bytes_read = read(fd, buff, BUFF_SIZE);
 	}
 }
 
@@ -35,13 +35,15 @@ static void	create_buff(char **buff, const int fd, ssize_t *bytes_read)
 	read_to_buff(fd, *buff, bytes_read);
 }
 
-
 static void	add_to_line(char **line, char *buff, char *newline)
 {
 	char	*temp;
 
 	if (!*line && !newline)
-		*line = ft_strdup(buff);
+	{
+		*line = ft_strnew(BUFF_SIZE + 1);
+		ft_strncpy(*line, buff, BUFF_SIZE);
+	}
 	else if (!*line && newline)
 	{
 		*line = ft_strsub(buff, 0, (newline - buff)); // What if len is 0?
