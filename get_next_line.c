@@ -6,7 +6,7 @@
 /*   By: cnysten <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/06 20:29:07 by cnysten           #+#    #+#             */
-/*   Updated: 2021/12/08 21:37:29 by cnysten          ###   ########.fr       */
+/*   Updated: 2021/12/15 17:09:13 by cnysten          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,13 +19,16 @@ static int	has_newline(const char *buff, char **newline)
 	return (!(*newline == NULL));
 }
 
-static void	read_to_buff(const int fd, char *buff, ssize_t *bytes_read)
+static int	read_to_buff(const int fd, char *buff, ssize_t *bytes_read)
 {
 	if (buff)
 	{
 		ft_strclr(buff);
 		*bytes_read = read(fd, buff, BUFF_SIZE);
+		if (*bytes_read < 0)
+			return (-1);
 	}
+	return (0);
 }
 
 static int	create_buff(char **buff, const int fd, ssize_t *bytes_read)
@@ -35,7 +38,8 @@ static int	create_buff(char **buff, const int fd, ssize_t *bytes_read)
 	*buff = ft_strnew(BUFF_SIZE);
 	if (!*buff)
 		return (-1);
-	read_to_buff(fd, *buff, bytes_read);
+	if (read_to_buff(fd, *buff, bytes_read) == -1)
+		return  (-1);
 	return (1);
 }
 
@@ -83,15 +87,15 @@ int	get_next_line(const int fd, char **line)
 	while (!has_newline(bufs[fd], &newline))
 	{
 		add_to_line(line, bufs[fd], newline);
-		read_to_buff(fd, bufs[fd], &bytes_read);
-		if (bytes_read <= 0)
+		if (read_to_buff(fd, bufs[fd], &bytes_read) == -1)
+			return (-1);
+		if (bytes_read == 0)
 			break ;
 	}
 	add_to_line(line, bufs[fd], newline);
 	if (bytes_read == 0 && ft_strlen(bufs[fd]) == 0)
 	{
-		free(bufs[fd]);
-		bufs[fd] = NULL;
+		ft_strdel(&bufs[fd]);
 		return (0);
 	}
 	return (1);
