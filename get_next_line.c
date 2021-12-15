@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include <stdio.h>
 
 static int	has_newline(const char *buff, char **newline)
 {
@@ -29,10 +28,15 @@ static void	read_to_buff(const int fd, char *buff, ssize_t *bytes_read)
 	}
 }
 
-static void	create_buff(char **buff, const int fd, ssize_t *bytes_read)
+static int	create_buff(char **buff, const int fd, ssize_t *bytes_read)
 {
+	if (*buff)
+		return (0);
 	*buff = ft_strnew(BUFF_SIZE);
+	if (!*buff)
+		return (-1);
 	read_to_buff(fd, *buff, bytes_read);
+	return (1);
 }
 
 static void	add_to_line(char **line, char *buff, char *newline)
@@ -42,12 +46,12 @@ static void	add_to_line(char **line, char *buff, char *newline)
 	if (!*line && !newline)
 	{
 		*line = ft_strnew(BUFF_SIZE + 1);
-		ft_strncpy(*line, buff, BUFF_SIZE);
+		ft_strncpy(*line, buff, BUFF_SIZE + 1);
 	}
 	else if (!*line && newline)
 	{
-		*line = ft_strsub(buff, 0, (newline - buff)); // What if len is 0?
-		ft_strncpy(buff, (newline + 1), BUFF_SIZE);
+		*line = ft_strsub(buff, 0, (newline - buff));
+		ft_strncpy(buff, (newline + 1), BUFF_SIZE); // newline is not  necessarily null terminated
 	}
 	else if (*line && !newline)
 	{
@@ -74,9 +78,7 @@ int	get_next_line(const int fd, char **line)
 		return (-1);
 	bytes_read = 0;
 	newline = NULL;
-	if (!bufs[fd])
-		create_buff(&bufs[fd], fd, &bytes_read);
-	if (!bufs[fd])
+	if (create_buff(&bufs[fd], fd, &bytes_read) == -1)
 		return (-1);
 	while (!has_newline(bufs[fd], &newline))
 	{
