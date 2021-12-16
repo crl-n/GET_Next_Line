@@ -12,90 +12,54 @@
 
 #include "get_next_line.h"
 
-static int	has_newline(const char *buff, char **newline)
+static void	add_to_line(char **line, char **cache)
 {
-	if (buff && !*newline)
-		*newline = ft_strchr(buff, '\n');
-	return (!(*newline == NULL));
-}
-
-static int	read_to_buff(const int fd, char *buff, ssize_t *bytes_read)
-{
-	if (buff)
-	{
-		ft_strclr(buff);
-		*bytes_read = read(fd, buff, BUFF_SIZE);
-		if (*bytes_read < 0)
-			return (-1);
-	}
-	return (0);
-}
-
-static int	create_buff(char **buff, const int fd, ssize_t *bytes_read)
-{
-	if (*buff)
-		return (0);
-	*buff = ft_strnew(BUFF_SIZE);
-	if (!*buff)
-		return (-1);
-	if (read_to_buff(fd, *buff, bytes_read) == -1)
-		return  (-1);
-	return (1);
-}
-
-static void	add_to_line(char **line, char *buff, char *newline)
-{
+	char	*newline;
 	char	*temp;
-	char	*sub;
 
-	if (!*line && !newline)
-		*line = ft_strndup(buff, BUFF_SIZE + 1);
-	if (!*line && newline)
+	newline = ft_strchr(*cache, '\n');
+	if (!newline)
 	{
-		*line = ft_strsub(buff, 0, (newline - buff));
-		ft_strncpy(buff, (newline + 1), BUFF_SIZE - (newline - buff));
+		*line = ft_strdup(*cache);
+		ft_strdel(cache);
 	}
-	if (*line)
+	else
 	{
-		if (!newline)
-			temp = ft_strjoin(*line, buff);
-		else
-		{
-			sub = ft_strsub(buff, 0, (newline - buff));
-			temp = ft_strjoin(*line, sub);
-			ft_strncpy(buff, (newline + 1), BUFF_SIZE);
-			free(sub);
-		}
-		free(*line);
-		*line = temp;
+		*line = ft_strsub(*cache, 0, (newline - *cache));
+		temp = ft_strdup(newline + 1);
+		free(*cache);
+		*cache = temp;
+		if ((*cache)[0] == '\0')
+			ft_strdel(cache);
 	}
 }
 
 int	get_next_line(const int fd, char **line)
 {
-	static char	*bufs[MAX_FD + 1];
-	char		*newline;
+	static char	*caches[MAX_FD + 1];
+	char		buff[BUFF_SIZE + 1];
+	char		*temp;
 	ssize_t		bytes_read;
 
-	if (fd < 0)
+	if (fd < 0 || !line || fd > MAX_FD)
 		return (-1);
-	bytes_read = 0;
-	newline = NULL;
-	if (create_buff(&bufs[fd], fd, &bytes_read) == -1)
-		return (-1);
-	while (!has_newline(bufs[fd], &newline))
+	bytes_read = 1;
+	while (bytes_read > 0)
 	{
-		add_to_line(line, bufs[fd], newline);
-		if (read_to_buff(fd, bufs[fd], &bytes_read) == -1)
-			return (-1);
-		if (bytes_read == 0)
+		bytes_read = read(fd, &buff, BUFF_SIZE);
+		buff[bytes_read] = '\0';
+		if (!caches[fd])
+			caches[fd] = ft_strnew(1);
+		temp = ft_strjoin(caches[fd], buff);
+		free(caches[fd]);
+		caches[fd] = temp;
+		if (ft_strchr(buff, '\n'))
 			break ;
 	}
-	add_to_line(line, bufs[fd], newline);
-	if (bytes_read == 0 && ft_strlen(bufs[fd]) == 0)
-	{
-		ft_strdel(&bufs[fd]);
+	if (bytes_read < 0)
+		return (-1);
+	add_to_line(line, &(caches[fd]));
+	if (bytes_read == 0 && !caches[fd])
 		return (0);
-	}
 	return (1);
 }
