@@ -34,11 +34,21 @@ static void	add_to_line(char **line, char **cache)
 	}
 }
 
+static char	*buff_to_cache(char *buff, char *cache)
+{
+	char	*temp;
+
+	if (!cache)
+		cache = ft_strnew(1);
+	temp = ft_strjoin(cache, buff);
+	free(cache);
+	return (temp);
+}
+
 int	get_next_line(const int fd, char **line)
 {
 	static char	*caches[MAX_FD + 1];
 	char		buff[BUFF_SIZE + 1];
-	char		*temp;
 	ssize_t		bytes_read;
 
 	if (fd < 0 || !line || fd > MAX_FD)
@@ -48,18 +58,16 @@ int	get_next_line(const int fd, char **line)
 	{
 		bytes_read = read(fd, &buff, BUFF_SIZE);
 		buff[bytes_read] = '\0';
-		if (!caches[fd])
-			caches[fd] = ft_strnew(1);
-		temp = ft_strjoin(caches[fd], buff);
-		free(caches[fd]);
-		caches[fd] = temp;
+		caches[fd] = buff_to_cache(buff, caches[fd]);
+		if (caches[fd][0] == '\0')
+			ft_strdel(&(caches[fd]));
 		if (ft_strchr(buff, '\n'))
 			break ;
 	}
 	if (bytes_read < 0)
 		return (-1);
-	add_to_line(line, &(caches[fd]));
 	if (bytes_read == 0 && !caches[fd])
 		return (0);
+	add_to_line(line, &(caches[fd]));
 	return (1);
 }
