@@ -57,6 +57,8 @@ int	get_next_line(const int fd, char **line)
 	while (bytes_read > 0)
 	{
 		bytes_read = read(fd, &buff, BUFF_SIZE);
+		if (bytes_read < 0)
+			break ;
 		buff[bytes_read] = '\0';
 		caches[fd] = buff_to_cache(buff, caches[fd]);
 		if (caches[fd][0] == '\0')
