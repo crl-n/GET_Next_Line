@@ -11,48 +11,56 @@
 /* ************************************************************************** */
 
 #include "get_next_line.h"
+#include "libft.h"
+#include <unistd.h>
+#include <stdlib.h>
 
-static void	add_to_line(char **line, char **cache)
+static void	add_to_line(char **line, char **heap)
 {
 	char	*newline;
-	char	*temp;
+	size_t	len;
 
-	newline = ft_strchr(*cache, '\n');
+	newline = ft_strchr(*heap, '\n');
 	if (!newline)
 	{
-		*line = ft_strdup(*cache);
-		ft_strdel(cache);
+		*line = ft_strdup(*heap);
+		ft_strdel(heap);
 	}
 	else
 	{
-		*line = ft_strsub(*cache, 0, (newline - *cache));
-		temp = ft_strdup(newline + 1);
-		free(*cache);
-		*cache = temp;
-		if ((*cache)[0] == '\0')
-			ft_strdel(cache);
+		*line = ft_strsub(*heap, 0, (newline - *heap));
+		len = ft_strlen(newline + 1);
+		ft_memcpy(*heap, newline + 1, len);
+		(*heap)[len] = '\0';
+		if ((*heap)[0] == '\0')
+			ft_strdel(heap);
 	}
 }
 
-static char	*buff_to_cache(char *buff, char *cache)
+static char	*buff_to_heap(char *buff, char *heap)
 {
 	char	*temp;
 
-	if (!cache)
-		cache = ft_strnew(1);
-	temp = ft_strjoin(cache, buff);
-	free(cache);
+	if (!heap)
+		heap = ft_strnew(0);
+	temp = ft_strjoin(heap, buff);
+	free(heap);
 	return (temp);
 }
 
 int	get_next_line(const int fd, char **line)
 {
-	static char	*caches[MAX_FD + 1];
+	static char	*heap[MAX_FD + 1];
 	char		buff[BUFF_SIZE + 1];
 	ssize_t		bytes_read;
 
 	if (fd < 0 || !line || fd > MAX_FD)
 		return (-1);
+	if (heap[fd])
+	{
+		add_to_line(line, &(heap[fd]));
+		return (1);
+	}
 	bytes_read = 1;
 	while (bytes_read > 0)
 	{
@@ -60,16 +68,16 @@ int	get_next_line(const int fd, char **line)
 		if (bytes_read < 0)
 			break ;
 		buff[bytes_read] = '\0';
-		caches[fd] = buff_to_cache(buff, caches[fd]);
-		if (caches[fd][0] == '\0')
-			ft_strdel(&(caches[fd]));
+		heap[fd] = buff_to_heap(buff, heap[fd]);
+		if (heap[fd][0] == '\0')
+			ft_strdel(&(heap[fd]));
 		if (ft_strchr(buff, '\n'))
 			break ;
 	}
 	if (bytes_read < 0)
 		return (-1);
-	if (bytes_read == 0 && !caches[fd])
+	if (bytes_read == 0 && !heap[fd])
 		return (0);
-	add_to_line(line, &(caches[fd]));
+	add_to_line(line, &(heap[fd]));
 	return (1);
 }
